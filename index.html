@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MindSpace - a private space to reflect</title>
+<style>
+  :root {
+    --bg: #f3f7f6; --card: #ffffff; --ink: #1f2d2b; --muted: #5d706c; --line: #dbe6e3;
+    --brand: #2f8f83; --brand-ink: #ffffff; --soft: #e3f2ef; --warn: #b3541e; --warn-bg: #fdf0e6;
+    --high: #b3261e; --med: #b3541e; --low: #8a6d00; --radius: 14px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #121a19; --card: #1a2625; --ink: #e4efec; --muted: #9bb0ab; --line: #2c3d3a;
+      --brand: #4cb5a7; --brand-ink: #0c1a18; --soft: #22403b; --warn: #f0a46e; --warn-bg: #33271d;
+      --high: #ff8a80; --med: #f0a46e; --low: #e0c158;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--ink); line-height: 1.5; }
+  header { background: var(--card); border-bottom: 1px solid var(--line); padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  header h1 { margin: 0; font-size: 1.25rem; letter-spacing: .3px; }
+  header h1 span { color: var(--brand); }
+  .who { display: flex; align-items: center; gap: 10px; font-size: .92rem; color: var(--muted); }
+  .helpline { background: var(--warn-bg); color: var(--warn); font-size: .9rem; padding: 8px 20px; text-align: center; border-bottom: 1px solid var(--line); }
+  main { max-width: 980px; margin: 0 auto; padding: 20px; }
+  .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; }
+  .card h2 { margin: 0 0 10px; font-size: 1.05rem; }
+  .wide { grid-column: 1 / -1; }
+  label { display: block; font-size: .9rem; color: var(--muted); margin: 10px 0 4px; }
+  input[type=text], input[type=password], textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--ink); font: inherit; }
+  textarea { min-height: 120px; resize: vertical; }
+  input[type=range] { width: 100%; accent-color: var(--brand); }
+  button { font: inherit; cursor: pointer; border: 1px solid var(--line); background: var(--card); color: var(--ink); padding: 9px 14px; border-radius: 10px; }
+  button.primary { background: var(--brand); color: var(--brand-ink); border-color: var(--brand); font-weight: 600; }
+  button.small { padding: 5px 10px; font-size: .85rem; }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 12px; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 8px; }
+  .tabs button.active { background: var(--soft); border-color: var(--brand); }
+  .muted { color: var(--muted); font-size: .9rem; }
+  .consent { background: var(--soft); border-radius: 10px; padding: 12px; font-size: .9rem; margin-top: 10px; }
+  .check { display: flex; gap: 8px; align-items: flex-start; margin-top: 10px; font-size: .92rem; }
+  .msg { margin-top: 10px; padding: 10px 12px; border-radius: 10px; font-size: .92rem; }
+  .msg.err { background: var(--warn-bg); color: var(--warn); }
+  .msg.ok { background: var(--soft); }
+  .bar-row { display: flex; align-items: center; gap: 8px; font-size: .85rem; margin: 4px 0; }
+  .bar-row .lbl { width: 105px; color: var(--muted); flex: none; }
+  .bar { height: 12px; background: var(--brand); border-radius: 6px; }
+  .entry { border-top: 1px solid var(--line); padding: 10px 0; }
+  .entry:first-child { border-top: none; }
+  .pill { display: inline-block; font-size: .75rem; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); margin-right: 6px; }
+  .pill.shared { background: var(--soft); border-color: var(--brand); }
+  .sev-HIGH { color: var(--high); font-weight: 700; } .sev-MEDIUM { color: var(--med); font-weight: 700; } .sev-LOW { color: var(--low); font-weight: 700; }
+  table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; }
+  .hidden { display: none !important; }
+  .breath { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 10px 0; }
+  .circle { width: 110px; height: 110px; border-radius: 50%; background: var(--soft); border: 3px solid var(--brand); transition: transform 4s ease-in-out; display: flex; align-items: center; justify-content: center; font-size: .9rem; text-align: center; }
+  footer { text-align: center; color: var(--muted); font-size: .8rem; padding: 20px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Mind<span>Space</span></h1>
+  <div class="who hidden" id="who"><span id="whoName"></span><button class="small" id="logoutBtn">Log out</button></div>
+</header>
+<div class="helpline">If you are in distress, please talk to someone now: <strong>Tele-MANAS (India) 14416</strong>. In immediate danger, call your local emergency number.</div>
+
+<main>
+
+  <!-- ===== Login / Register ===== -->
+  <section id="authView" class="card" style="max-width:520px;margin:20px auto;">
+    <h2>A private space to reflect</h2>
+    <p class="muted">Use a pseudonym, not your real name. Your entries stay private unless you choose to share them.</p>
+    <div class="tabs">
+      <button id="tabLogin" class="active">Log in</button>
+      <button id="tabReg">Register</button>
+    </div>
+    <label for="aName">Pseudonym</label>
+    <input type="text" id="aName" autocomplete="username">
+    <label for="aPw">Password</label>
+    <input type="password" id="aPw" autocomplete="current-password">
+    <div id="consentBox" class="hidden">
+      <div class="consent">
+        <strong>Consent.</strong> Your entries are <strong>private by default</strong>. Only entries you mark "Share" are visible to the counselor.
+        If a <strong>high-severity</strong> phrase is detected, a minimal alert (your pseudonym, severity and time, <strong>never your entry text</strong>) is sent to the counselor and you are told straight away.
+        This is a student prototype, not a medical or emergency service.
+      </div>
+      <label class="check"><input type="checkbox" id="aConsent"> <span>I understand and accept.</span></label>
+    </div>
+    <div class="row"><button class="primary" id="authBtn">Log in</button></div>
+    <div id="authMsg"></div>
+  </section>
+
+  <!-- ===== Patient ===== -->
+  <section id="patientView" class="hidden">
+    <div class="grid">
+
+      <div class="card">
+        <h2>Mood check-in</h2>
+        <label for="mood">How are you feeling right now? <strong id="moodVal">5</strong>/10 <span class="muted">(1 = very low, 10 = very good)</span></label>
+        <input type="range" id="mood" min="1" max="10" value="5">
+        <label for="moodNote">Short note (optional)</label>
+        <input type="text" id="moodNote">
+        <div class="row"><button class="primary" id="moodBtn">Save mood</button></div>
+        <div id="moodMsg"></div>
+      </div>
+
+      <div class="card">
+        <h2>My last 7 days</h2>
+        <div id="trend" class="muted">Loading...</div>
+      </div>
+
+      <div class="card wide">
+        <h2>Journal</h2>
+        <label for="entryText">What is on your mind?</label>
+        <textarea id="entryText" placeholder="Write freely. You decide who can see it."></textarea>
+        <label class="check"><input type="checkbox" id="entryShare"> <span>Share this entry with my counselor <span class="muted">(unticked = private, only you can see it)</span></span></label>
+        <div class="row"><button class="primary" id="entryBtn">Save entry</button></div>
+        <div id="entryResult"></div>
+      </div>
+
+      <div class="card">
+        <h2>Calming exercise</h2>
+        <div class="breath">
+          <div class="circle" id="circle">Ready</div>
+          <button id="breathBtn">Start breathing exercise</button>
+          <span class="muted">In for 4, hold for 4, out for 6.</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Grounding (5-4-3-2-1)</h2>
+        <p class="muted" style="margin-top:0">Look around you and name: <strong>5</strong> things you can see, <strong>4</strong> you can touch, <strong>3</strong> you can hear, <strong>2</strong> you can smell, <strong>1</strong> you can taste. It brings your attention back to the present.</p>
+      </div>
+
+      <div class="card wide">
+        <h2>My entries</h2>
+        <div id="entries" class="muted">Loading...</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Counselor ===== -->
+  <section id="counselorView" class="hidden">
+    <div class="grid">
+      <div class="card wide">
+        <h2>Alerts (most urgent first)</h2>
+        <p class="muted" style="margin-top:0">Alerts never contain journal text. They show only the pseudonym, severity, time and rule IDs.</p>
+        <div class="row" style="margin-top:0"><button class="primary" id="nextBtn">Take next urgent alert</button><button id="refreshBtn">Refresh</button></div>
+        <div id="alertMsg"></div>
+        <div id="alerts" style="overflow-x:auto"></div>
+      </div>
+      <div class="card wide">
+        <h2>Entries patients chose to share</h2>
+        <div id="shared" class="muted">Loading...</div>
+      </div>
+    </div>
+  </section>
+
+</main>
+<footer>MindSpace is a student prototype for learning and demonstration. It is not a medical tool and does not diagnose. Use fictional data only.</footer>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let token = sessionStorage.getItem('ms_token') || '';
+let role = sessionStorage.getItem('ms_role') || '';
+let me = sessionStorage.getItem('ms_name') || '';
+let mode = 'login';
+
+async function api(path, method = 'GET', data) {
+  let r;
+  try {
+    r = await fetch(path, {
+      method,
+      headers: {'Content-Type': 'application/json', 'X-Token': token},
+      body: data ? JSON.stringify(data) : undefined
+    });
+  } catch (e) { throw new Error('Cannot reach the server. Is it still running in the terminal?'); }
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) {
+    if (r.status === 401 && token) { logoutLocal(); }
+    throw new Error(j.error || ('Request failed (status ' + r.status + ').'));
+  }
+  return j;
+}
+const show = (el, on) => el.classList.toggle('hidden', !on);
+const note = (sel, text, kind) => { $(sel).innerHTML = text ? `<div class="msg ${kind}">${esc(text)}</div>` : ''; };
+
+/* ---------- auth ---------- */
+function setMode(m) {
+  mode = m;
+  $('#tabLogin').classList.toggle('active', m === 'login');
+  $('#tabReg').classList.toggle('active', m === 'register');
+  show($('#consentBox'), m === 'register');
+  $('#authBtn').textContent = m === 'login' ? 'Log in' : 'Register';
+  note('#authMsg', '');
+}
+$('#tabLogin').onclick = () => setMode('login');
+$('#tabReg').onclick = () => setMode('register');
+
+$('#authBtn').onclick = async () => {
+  const pseudonym = $('#aName').value.trim(), password = $('#aPw').value;
+  try {
+    if (mode === 'register') {
+      await api('/api/register', 'POST', {pseudonym, password, consent: $('#aConsent').checked});
+      setMode('login');
+      note('#authMsg', 'Registered. You can log in now.', 'ok');
+      return;
+    }
+    const j = await api('/api/login', 'POST', {pseudonym, password});
+    token = j.token; role = j.role; me = j.pseudonym;
+    sessionStorage.setItem('ms_token', token); sessionStorage.setItem('ms_role', role); sessionStorage.setItem('ms_name', me);
+    $('#aPw').value = '';
+    render();
+  } catch (e) { note('#authMsg', e.message, 'err'); }
+};
+$('#aPw').addEventListener('keydown', e => { if (e.key === 'Enter') $('#authBtn').click(); });
+
+function logoutLocal() {
+  token = role = me = '';
+  sessionStorage.clear();
+  stopBreath();
+  render();
+}
+$('#logoutBtn').onclick = async () => { try { await api('/api/logout', 'POST'); } catch (e) {} logoutLocal(); };
+
+function render() {
+  const loggedIn = !!token;
+  show($('#authView'), !loggedIn);
+  show($('#who'), loggedIn);
+  show($('#patientView'), loggedIn && role === 'patient');
+  show($('#counselorView'), loggedIn && role === 'counselor');
+  if (loggedIn) $('#whoName').textContent = (role === 'counselor' ? 'Counselor: ' : 'Hello, ') + me;
+  if (loggedIn && role === 'patient') { loadTrend(); loadEntries(); }
+  if (loggedIn && role === 'counselor') { loadAlerts(); loadShared(); }
+}
+
+/* ---------- patient ---------- */
+$('#mood').oninput = () => { $('#moodVal').textContent = $('#mood').value; };
+$('#moodBtn').onclick = async () => {
+  try {
+    await api('/api/mood', 'POST', {value: +$('#mood').value, note: $('#moodNote').value});
+    $('#moodNote').value = '';
+    note('#moodMsg', 'Mood saved.', 'ok');
+    loadTrend();
+  } catch (e) { note('#moodMsg', e.message, 'err'); }
+};
+
+async function loadTrend() {
+  try {
+    const j = await api('/api/trend');
+    if (!j.count) { $('#trend').textContent = 'No check-ins in the last 7 days.'; return; }
+    $('#trend').innerHTML = j.records.map(r =>
+      `<div class="bar-row"><span class="lbl">${esc(r.time)}</span><div class="bar" style="width:${r.value * 8}%"></div><span>${r.value}</span></div>`
+    ).join('') + `<p class="muted">Check-ins: ${j.count} &nbsp; Average mood: <strong>${j.average.toFixed(1)}/10</strong><br>This is a reflection of what you entered, not a health assessment.</p>`;
+  } catch (e) { $('#trend').textContent = e.message; }
+}
+
+$('#entryBtn').onclick = async () => {
+  const text = $('#entryText').value.trim();
+  if (!text) { note('#entryResult', 'Write something first.', 'err'); return; }
+  try {
+    const j = await api('/api/entry', 'POST', {text, share: $('#entryShare').checked});
+    $('#entryText').value = ''; $('#entryShare').checked = false;
+    let html = `<div class="msg ok">Entry saved as <strong>${j.shared ? 'SHARED' : 'PRIVATE'}</strong>.</div>`;
+    if (j.negated) html += `<div class="msg ok">A phrase appeared in a negated context, so nothing was flagged. (Rules can misread context.)</div>`;
+    if (j.severity !== 'NONE') {
+      html += `<div class="msg err"><strong>Some words matched our support rules</strong> (this is not a diagnosis):<ul>` +
+        j.matches.map(m => `<li>rule ${esc(m.rule)}: "${esc(m.phrase)}"</li>`).join('') + `</ul>`;
+      if (j.action === 'alerted') html += `A minimal alert (no entry text) was sent to the counselor, as you agreed at registration.<br>`;
+      if (j.action === 'ask') html += `<div class="row"><button class="primary small" id="contactBtn">Let my counselor know I could use support</button></div>`;
+      html += `<p style="margin-bottom:0">Please talk to someone now: <strong>Tele-MANAS 14416</strong>. Try the breathing exercise below if it helps.</p></div>`;
+    }
+    $('#entryResult').innerHTML = html;
+    const cb = $('#contactBtn');
+    if (cb) cb.onclick = async () => {
+      try { await api(`/api/entry/${j.entryId}/contact`, 'POST'); cb.disabled = true; cb.textContent = 'Counselor notified (no entry text sent)'; }
+      catch (e) { note('#entryResult', e.message, 'err'); }
+    };
+    loadEntries();
+  } catch (e) { note('#entryResult', e.message, 'err'); }
+};
+
+async function loadEntries() {
+  try {
+    const j = await api('/api/entries');
+    if (!j.entries.length) { $('#entries').textContent = 'No entries yet.'; return; }
+    $('#entries').innerHTML = j.entries.slice().reverse().map(e =>
+      `<div class="entry"><span class="pill ${e.shared ? 'shared' : ''}">${e.shared ? 'Shared' : 'Private'}</span><span class="muted">#${e.id} &middot; ${esc(e.time)}</span>
+       <div>${esc(e.text)}</div>
+       <button class="small" data-id="${e.id}" style="margin-top:6px">Make ${e.shared ? 'private' : 'shared'}</button></div>`
+    ).join('');
+    document.querySelectorAll('#entries button[data-id]').forEach(b => b.onclick = async () => {
+      try { await api(`/api/entry/${b.dataset.id}/toggle`, 'POST'); loadEntries(); } catch (e) {}
+    });
+  } catch (e) { $('#entries').textContent = e.message; }
+}
+
+/* breathing exercise: in 4, hold 4, out 6 */
+let breathTimer = null;
+function stopBreath() { clearTimeout(breathTimer); breathTimer = null; const c = $('#circle'); if (c) { c.style.transform = 'scale(1)'; c.textContent = 'Ready'; } const b = $('#breathBtn'); if (b) b.textContent = 'Start breathing exercise'; }
+$('#breathBtn').onclick = () => {
+  if (breathTimer) { stopBreath(); return; }
+  $('#breathBtn').textContent = 'Stop';
+  const c = $('#circle');
+  const phases = [['Breathe in', 4, 1.5], ['Hold', 4, 1.5], ['Breathe out', 6, 1]];
+  let i = 0;
+  const step = () => {
+    const [label, secs, scale] = phases[i % 3];
+    c.style.transition = `transform ${secs}s ease-in-out`;
+    c.style.transform = `scale(${scale})`;
+    c.textContent = label;
+    i++;
+    breathTimer = setTimeout(step, secs * 1000);
+  };
+  step();
+};
+
+/* ---------- counselor ---------- */
+function alertRows(list) {
+  return list.map(a => `<tr><td>#${a.id}</td><td class="sev-${a.severity}">${a.severity}</td><td>${esc(a.pseudonym)}</td><td>${esc(a.rules)}</td><td>${esc(a.created)}</td><td>${esc(a.status)}</td>
+    <td>${a.status === 'Queued' || a.status === 'Closed' ? '' : `<button class="small" data-adv="${a.id}">Next status</button>`}</td></tr>`).join('');
+}
+async function loadAlerts() {
+  try {
+    const j = await api('/api/alerts');
+    const head = '<table><tr><th>ID</th><th>Severity</th><th>Patient</th><th>Rules</th><th>Created</th><th>Status</th><th></th></tr>';
+    let html = '<h3 style="margin:14px 0 4px;font-size:.95rem">Queued</h3>';
+    html += j.queued.length ? head + alertRows(j.queued) + '</table>' : '<p class="muted">No queued alerts.</p>';
+    if (j.others.length) html += '<h3 style="margin:14px 0 4px;font-size:.95rem">Handled / in progress</h3>' + head + alertRows(j.others) + '</table>';
+    $('#alerts').innerHTML = html;
+    document.querySelectorAll('#alerts button[data-adv]').forEach(b => b.onclick = async () => {
+      try { const r = await api(`/api/alerts/${b.dataset.adv}/advance`, 'POST'); note('#alertMsg', r.message, 'ok'); loadAlerts(); }
+      catch (e) { note('#alertMsg', e.message, 'err'); }
+    });
+  } catch (e) { $('#alerts').textContent = e.message; }
+}
+$('#nextBtn').onclick = async () => {
+  try { const r = await api('/api/alerts/next', 'POST'); note('#alertMsg', `Taking alert #${r.alert.id} (${r.alert.severity}) from ${r.alert.pseudonym}. Status: ${r.alert.status}.`, 'ok'); loadAlerts(); }
+  catch (e) { note('#alertMsg', e.message, 'err'); }
+};
+$('#refreshBtn').onclick = () => { loadAlerts(); loadShared(); };
+async function loadShared() {
+  try {
+    const j = await api('/api/shared');
+    $('#shared').innerHTML = j.entries.length ? j.entries.map(e =>
+      `<div class="entry"><strong>${esc(e.pseudonym)}</strong> <span class="muted">#${e.id} &middot; ${esc(e.time)}</span><div>${esc(e.text)}</div></div>`).join('') : 'Nothing shared yet.';
+  } catch (e) { $('#shared').textContent = e.message; }
+}
+
+render();
+</script>
+</body>
+</html>
